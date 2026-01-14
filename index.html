@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NWNY Season Watch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            background-color: #000;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-weight: 900;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* The GIF Background - Fixed and Filling everything */
+        #bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Content Layout */
+        main {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+            /* Shifted up slightly */
+            margin-top: -3vh;
+        }
+
+        /* High contrast shadows for readability */
+        .shadow-text {
+            text-shadow: 
+                -1.5px -1.5px 0 #000,  
+                 1.5px -1.5px 0 #000,
+                -1.5px  1.5px 0 #000,
+                 1.5px  1.5px 0 #000,
+                 0px 4px 15px rgba(0,0,0,0.8);
+        }
+
+        .clock {
+            font-size: clamp(3.5rem, 12vw, 6.5rem);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .details-row {
+            font-size: 1.6rem;
+            letter-spacing: 0.05rem;
+            opacity: 0.95;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .season-tag {
+            letter-spacing: 0.1rem;
+        }
+
+        .bullet {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg"></div>
+
+    <main>
+        <div id="clock" class="clock shadow-text">00:00</div>
+        <div class="details-row shadow-text">
+            <span id="date-text">...</span>
+            <span class="bullet">•</span>
+            <span id="season-text" class="season-tag">...</span>
+        </div>
+    </main>
+
+    <script>
+        const seasonGifs = {
+            winter: "https://i.postimg.cc/Pq370JgF/winter.gif",
+            spring: "https://i.postimg.cc/Jh6FS0fg/spring.gif",
+            summer: "https://i.postimg.cc/fb2P1k4L/summer.gif",
+            fall: "https://i.postimg.cc/XXScT67p/fall.gif"
+        };
+
+        function getSeason(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+
+            if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 20)) {
+                return 'winter';
+            } else if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) {
+                return 'spring';
+            } else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) {
+                return 'summer';
+            } else {
+                return 'fall';
+            }
+        }
+
+        let currentActiveSeason = "";
+
+        function update() {
+            const now = new Date();
+            const nyTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+            const nyDate = new Date(nyTimeStr);
+
+            // Time Display - No Seconds
+            document.getElementById('clock').textContent = nyDate.toLocaleTimeString('en-US', { 
+                timeZone: "America/New_York", 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+
+            // Date Display
+            document.getElementById('date-text').textContent = nyDate.toLocaleDateString('en-US', { 
+                timeZone: "America/New_York", 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+
+            // Season logic and background update
+            const season = getSeason(nyDate);
+            if (season !== currentActiveSeason) {
+                currentActiveSeason = season;
+                document.getElementById('season-text').textContent = season;
+                document.getElementById('bg').style.backgroundImage = `url('${seasonGifs[season]}')`;
+            }
+        }
+
+        update();
+        setInterval(update, 1000);
+    </script>
+</body>
+</html>
