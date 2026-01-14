@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NWNY Season Watch</title>
+    <title>4 Stars of Seasons</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
@@ -24,24 +24,36 @@
             overflow: hidden;
         }
 
-        /* The GIF Background - Fixed and Filling everything */
+        /* The GIF Background Container */
         #bg {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-color: #000;
+            transition: background-image 1s ease-in-out;
+        }
+
+        /* Dark overlay set to 10% (0.1) opacity */
+        #bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            z-index: 2;
         }
 
         /* Content Layout */
         main {
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: relative;
             width: 100%;
             height: 100%;
             display: flex;
@@ -50,43 +62,36 @@
             align-items: center;
             text-align: center;
             z-index: 10;
-            /* Shifted up slightly */
-            margin-top: -3vh;
+            margin-top: -2vh;
         }
 
-        /* High contrast shadows for readability */
+        /* Removed stroke-style border, replaced with deep soft shadow for visibility */
         .shadow-text {
-            text-shadow: 
-                -1.5px -1.5px 0 #000,  
-                 1.5px -1.5px 0 #000,
-                -1.5px  1.5px 0 #000,
-                 1.5px  1.5px 0 #000,
-                 0px 4px 15px rgba(0,0,0,0.8);
+            text-shadow: 0px 4px 30px rgba(0, 0, 0, 0.8), 0px 0px 10px rgba(0, 0, 0, 0.5);
         }
 
         .clock {
-            font-size: clamp(3.5rem, 12vw, 6.5rem);
+            font-size: clamp(4rem, 18vw, 10rem);
             line-height: 1;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
         }
 
         .details-row {
-            font-size: 1.6rem;
+            font-size: clamp(1.2rem, 5vw, 2rem);
             letter-spacing: 0.05rem;
-            opacity: 0.95;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 1rem;
             text-transform: uppercase;
         }
 
         .season-tag {
-            letter-spacing: 0.1rem;
+            letter-spacing: 0.15rem;
         }
 
         .bullet {
-            font-size: 1.2rem;
-            opacity: 0.8;
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -111,6 +116,11 @@
             fall: "https://i.postimg.cc/XXScT67p/fall.gif"
         };
 
+        function getNYDate() {
+            const nyString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+            return new Date(nyString);
+        }
+
         function getSeason(date) {
             const month = date.getMonth() + 1;
             const day = date.getDate();
@@ -129,32 +139,30 @@
         let currentActiveSeason = "";
 
         function update() {
-            const now = new Date();
-            const nyTimeStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
-            const nyDate = new Date(nyTimeStr);
-
-            // Time Display - No Seconds
-            document.getElementById('clock').textContent = nyDate.toLocaleTimeString('en-US', { 
-                timeZone: "America/New_York", 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                hour12: true 
+            const nyNow = getNYDate();
+            
+            const timeStr = nyNow.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
             });
 
-            // Date Display
-            document.getElementById('date-text').textContent = nyDate.toLocaleDateString('en-US', { 
-                timeZone: "America/New_York", 
-                month: 'long', 
-                day: 'numeric', 
-                year: 'numeric' 
+            const dateStr = nyNow.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
             });
 
-            // Season logic and background update
-            const season = getSeason(nyDate);
+            document.getElementById('clock').textContent = timeStr;
+            document.getElementById('date-text').textContent = dateStr;
+
+            const season = getSeason(nyNow);
             if (season !== currentActiveSeason) {
                 currentActiveSeason = season;
                 document.getElementById('season-text').textContent = season;
-                document.getElementById('bg').style.backgroundImage = `url('${seasonGifs[season]}')`;
+                
+                const bgDiv = document.getElementById('bg');
+                bgDiv.style.backgroundImage = `url('${seasonGifs[season]}')`;
             }
         }
 
