@@ -166,9 +166,55 @@
             border: 1px solid #2a2a2a;
         }
 
-        .dates button { background: transparent; border: none; aspect-ratio: 1; border-radius: 10px; cursor: pointer; font-size: 14px; color: #bbb; }
-        .dates button.selected { background: #7c3aed; color: white; font-weight: 700; }
+        .dates button { 
+            background: transparent; 
+            border: 1px solid transparent; 
+            aspect-ratio: 1; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            color: #bbb; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .dates button:hover { background: rgba(255,255,255,0.05); }
+        
+        /* Highlight for the date currently active in the app */
+        .dates button.selected { 
+            background: #7c3aed !important; 
+            color: white !important; 
+            font-weight: 700; 
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Highlight for today's actual real date */
+        .dates button.today-marker {
+            border: 1px solid rgba(124, 58, 237, 0.6);
+            color: #7c3aed;
+        }
+
         .dates { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+        .calendar-nav-btn {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .calendar-nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
 
         #ny-overlay {
             position: fixed;
@@ -217,7 +263,7 @@
             font-size: clamp(3rem, 15vw, 6rem);
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: -0.01em; /* Tightened letter spacing */
+            letter-spacing: -0.01em;
             text-align: center;
             background: linear-gradient(to bottom, #fff, #ffd700);
             -webkit-background-clip: text;
@@ -285,10 +331,10 @@
         </div>
 
         <div class="datepicker" id="datepicker" hidden>
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <button class="prev" style="color:white; background:none; border:none; cursor:pointer;">&lt;</button>
+            <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:15px;">
+                <button class="calendar-nav-btn" id="prev-month">&lt;</button>
                 <span id="calendar-month-year" style="font-weight:bold;"></span>
-                <button class="next" style="color:white; background:none; border:none; cursor:pointer;">&gt;</button>
+                <button class="calendar-nav-btn" id="next-month">&gt;</button>
             </div>
             <div class="dates" id="calendar-grid"></div>
         </div>
@@ -302,11 +348,11 @@
             fall: "https://i.postimg.cc/XXScT67p/fall.gif"
         };
 
-        let manualTime = null;
-        let lastSystemTime = null;
+        let manualTimeOffset = 0; 
         let currentActiveSeason = "";
         let isRecapping = false;
         let isPaused = false;
+        let recapLastUpdate = null; 
 
         const bg = document.getElementById("bg");
         const datepicker = document.getElementById("datepicker");
@@ -319,20 +365,32 @@
         const mainContent = document.getElementById("main-content");
         const calendarGrid = document.getElementById("calendar-grid");
 
-        let selectedDate = new Date();
+        let calendarViewDate = new Date(); 
 
         pillTrigger.addEventListener("click", () => {
             datepicker.hidden = !datepicker.hidden;
             if(!datepicker.hidden) renderCalendar();
         });
 
+        document.getElementById('prev-month').addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month').addEventListener('click', (e) => {
+            e.stopPropagation();
+            calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+            renderCalendar();
+        });
+
         recapTrigger.addEventListener("click", () => {
             if (!isRecapping) {
                 isRecapping = true;
                 isPaused = false;
-                // Start exactly at Midnight Jan 1st
-                manualTime = new Date(2025, 0, 1, 0, 0, 0); 
-                lastSystemTime = new Date();
+                const startOfRecap = new Date(2025, 0, 1, 0, 0, 0);
+                manualTimeOffset = startOfRecap.getTime() - Date.now();
+                recapLastUpdate = Date.now();
                 bg.classList.remove("glass-mode");
                 nyOverlay.classList.remove("show");
                 mainContent.style.opacity = "1";
@@ -343,27 +401,54 @@
                 isPaused = !isPaused;
                 recapText.textContent = isPaused ? "Resume Recap" : "Pause Recap";
                 recapIcon.textContent = isPaused ? "▶" : "⏸";
-                lastSystemTime = new Date();
+                recapLastUpdate = Date.now();
             }
         });
 
         function renderCalendar() {
             calendarGrid.innerHTML = "";
-            const year = selectedDate.getFullYear();
-            const month = selectedDate.getMonth();
-            document.getElementById("calendar-month-year").textContent = selectedDate.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            document.getElementById("calendar-month-year").textContent = calendarViewDate.toLocaleDateString('en-US', {month:'long', year:'numeric'});
             
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
             const lastDate = new Date(year, month + 1, 0).getDate();
+            const realToday = getNYNow();
+
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const empty = document.createElement("div");
+                calendarGrid.appendChild(empty);
+            }
+
             for (let i = 1; i <= lastDate; i++) {
                 const btn = document.createElement("button");
                 btn.textContent = i;
-                if (i === selectedDate.getDate()) btn.classList.add("selected");
-                btn.onclick = () => {
-                    selectedDate = new Date(year, month, i);
+                const dayDate = new Date(year, month, i);
+                const currentAppTime = getActiveTime();
+
+                if (!isRecapping && manualTimeOffset !== 0) {
+                    if (dayDate.toDateString() === currentAppTime.toDateString()) {
+                        btn.classList.add("selected");
+                    }
+                }
+
+                if (dayDate.toDateString() === realToday.toDateString()) {
+                    btn.classList.add("today-marker");
+                }
+
+                btn.onclick = (e) => {
+                    e.stopPropagation();
                     isRecapping = false;
-                    manualTime = new Date(selectedDate);
-                    lastSystemTime = new Date();
+                    const realNow = Date.now();
+                    const targetDate = new Date(realNow);
+                    targetDate.setFullYear(year);
+                    targetDate.setMonth(month);
+                    targetDate.setDate(i);
+                    manualTimeOffset = targetDate.getTime() - realNow;
                     datepicker.hidden = true;
+                    bg.classList.remove("glass-mode");
+                    nyOverlay.classList.remove("show");
+                    mainContent.style.opacity = "1";
                     update();
                 };
                 calendarGrid.appendChild(btn);
@@ -372,6 +457,10 @@
 
         function getNYNow() {
             return new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
+        }
+
+        function getActiveTime() {
+            return new Date(Date.now() + manualTimeOffset);
         }
 
         function getSeason(date) {
@@ -386,7 +475,7 @@
         function resetApp() {
             isRecapping = false;
             isPaused = false;
-            manualTime = null;
+            manualTimeOffset = 0;
             bg.classList.remove("glass-mode");
             nyOverlay.classList.remove("show");
             mainContent.style.opacity = "1";
@@ -397,33 +486,20 @@
         }
 
         function update() {
-            const systemNow = new Date();
-            let activeTime;
+            const systemNow = Date.now();
+            
+            if (isRecapping && !isPaused) {
+                const elapsed = systemNow - recapLastUpdate;
+                const msIn12Days = 12 * 24 * 60 * 60 * 1000;
+                const simulatedElapsedMs = (elapsed / 1000) * msIn12Days; 
+                manualTimeOffset += simulatedElapsedMs;
+                recapLastUpdate = systemNow;
 
-            if (manualTime) {
-                if (!isPaused) {
-                    const elapsed = systemNow - lastSystemTime;
-                    if (isRecapping) {
-                        // Recap speed: 12 days per second
-                        // (12 days * 24h * 60m * 60s * 1000ms) / 1000ms per second
-                        const msIn12Days = 12 * 24 * 60 * 60 * 1000;
-                        const simulatedElapsedMs = (elapsed / 1000) * msIn12Days; 
-                        
-                        manualTime = new Date(manualTime.getTime() + simulatedElapsedMs);
-                    } else {
-                        // Normal real-time flow for manually selected dates
-                        manualTime = new Date(manualTime.getTime() + elapsed);
-                    }
-                }
-                activeTime = manualTime;
-                lastSystemTime = systemNow;
-
-                // End of recap check
+                const activeTime = new Date(systemNow + manualTimeOffset);
                 if (activeTime.getFullYear() >= 2026) {
                     isRecapping = false;
                     isPaused = false;
-                    manualTime = new Date(2026, 0, 1, 0, 0, 0);
-                    activeTime = manualTime;
+                    manualTimeOffset = new Date(2026, 0, 1, 0, 0, 0).getTime() - systemNow;
                     bg.classList.add("glass-mode");
                     nyOverlay.classList.add("show");
                     mainContent.style.opacity = "0";
@@ -431,19 +507,16 @@
                     recapText.textContent = "2025 Recap";
                     recapIcon.textContent = "▶";
                 }
-            } else {
-                activeTime = getNYNow();
-            }
-            
-            // Logic to lock UI clock at 12:00 AM specifically during Recap
-            let displayTime = new Date(activeTime);
-            if (isRecapping) {
-                displayTime.setHours(0, 0, 0, 0);
+            } else if (isRecapping && isPaused) {
+                recapLastUpdate = systemNow;
             }
 
-            document.getElementById('clock').textContent = displayTime.toLocaleTimeString('en-US', {
-                hour: '2-digit', minute: '2-digit', hour12: true
-            });
+            const activeTime = getActiveTime();
+            
+            // Format Display: No seconds included now
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+
+            document.getElementById('clock').textContent = activeTime.toLocaleTimeString('en-US', timeOptions);
 
             document.getElementById('date-text').textContent = activeTime.toLocaleDateString('en-US', {
                 month: 'long', day: 'numeric', year: 'numeric'
