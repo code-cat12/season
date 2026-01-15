@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4 Stars of Seasons Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            background-color: #000;
+            font-family: "Inter", sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        #bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #000;
+            transition: background-image 1s ease-in-out, filter 1.5s ease;
+        }
+
+        #bg.glass-mode {
+            filter: blur(25px) brightness(0.7);
+        }
+
+        #bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+
+        main {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+            margin-top: -5vh;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+
+        .shadow-text {
+            font-weight: 900;
+            text-shadow: 0px 4px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .clock {
+            font-size: clamp(4rem, 18vw, 10rem);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .details-row {
+            font-size: clamp(1.2rem, 5vw, 2rem);
+            letter-spacing: 0.05rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-transform: uppercase;
+        }
+
+        .season-tag {
+            padding: 4px 0;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+        }
+
+        .controls-container {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            font-family: "Poppins", sans-serif;
+            pointer-events: auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .glass-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .glass-pill:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .recap-btn {
+            background: rgba(124, 58, 237, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+        }
+
+        .pause-btn {
+            background: rgba(255, 59, 48, 0.2);
+            border-color: rgba(255, 59, 48, 0.4);
+        }
+
+        .datepicker {
+            position: absolute;
+            bottom: calc(100% + 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: #181818;
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            color: #eee;
+            width: 350px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .dates button { background: transparent; border: none; aspect-ratio: 1; border-radius: 10px; cursor: pointer; font-size: 14px; color: #bbb; }
+        .dates button.selected { background: #7c3aed; color: white; font-weight: 700; }
+        .dates { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+        #ny-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        #ny-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .close-overlay {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .close-overlay:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .ny-text {
+            font-size: clamp(3rem, 15vw, 6rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.01em; /* Tightened letter spacing */
+            text-align: center;
+            background: linear-gradient(to bottom, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.1em;
+        }
+
+        .year-pop {
+            font-size: clamp(6rem, 25vw, 14rem);
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+            margin-top: -20px;
+        }
+
+        #testing-tag {
+            position: fixed; top: 30px; left: 30px; z-index: 100;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
+            padding: 8px 18px; border-radius: 40px; font-size: 0.75rem; font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        #testing-tag::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #34C759;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #34C759;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="testing-tag">Testing Mode</div>
+    <div id="bg"></div>
+
+    <main id="main-content">
+        <div id="clock" class="clock shadow-text">00:00</div>
+        <div class="details-row shadow-text">
+            <span id="date-text">...</span>
+            <span class="bullet">•</span>
+            <span id="season-text" class="season-tag">...</span>
+        </div>
+    </main>
+
+    <div id="ny-overlay">
+        <div class="close-overlay" onclick="resetApp()">✕</div>
+        <div class="ny-text shadow-text">Happy New Year</div>
+        <div class="year-pop shadow-text">2026</div>
+        <button class="glass-pill" onclick="resetApp()" style="margin-top: 40px;">Restart Timeline</button>
+    </div>
+
+    <div class="controls-container">
+        <div class="button-group">
+            <button class="glass-pill recap-btn" id="recap-trigger">
+                <span id="recap-icon">▶</span>
+                <span id="recap-text">2025 Recap</span>
+            </button>
+
+            <div class="glass-pill" id="pill-trigger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                <span id="pill-label">SELECT DATE</span>
+            </div>
+        </div>
+
+        <div class="datepicker" id="datepicker" hidden>
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <button class="prev" style="color:white; background:none; border:none; cursor:pointer;">&lt;</button>
+                <span id="calendar-month-year" style="font-weight:bold;"></span>
+                <button class="next" style="color:white; background:none; border:none; cursor:pointer;">&gt;</button>
+            </div>
+            <div class="dates" id="calendar-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        const seasonGifs = {
+            winter: "https://i.postimg.cc/Pq370JgF/winter.gif",
+            spring: "https://i.postimg.cc/Jh6FS0fg/spring.gif",
+            summer: "https://i.postimg.cc/fb2P1k4L/summer.gif",
+            fall: "https://i.postimg.cc/XXScT67p/fall.gif"
+        };
+
+        let manualTime = null;
+        let lastSystemTime = null;
+        let currentActiveSeason = "";
+        let isRecapping = false;
+        let isPaused = false;
+
+        const bg = document.getElementById("bg");
+        const datepicker = document.getElementById("datepicker");
+        const pillTrigger = document.getElementById("pill-trigger");
+        const pillLabel = document.getElementById("pill-label");
+        const recapTrigger = document.getElementById("recap-trigger");
+        const recapText = document.getElementById("recap-text");
+        const recapIcon = document.getElementById("recap-icon");
+        const nyOverlay = document.getElementById("ny-overlay");
+        const mainContent = document.getElementById("main-content");
+        const calendarGrid = document.getElementById("calendar-grid");
+
+        let selectedDate = new Date();
+
+        pillTrigger.addEventListener("click", () => {
+            datepicker.hidden = !datepicker.hidden;
+            if(!datepicker.hidden) renderCalendar();
+        });
+
+        recapTrigger.addEventListener("click", () => {
+            if (!isRecapping) {
+                isRecapping = true;
+                isPaused = false;
+                // Start exactly at Midnight Jan 1st
+                manualTime = new Date(2025, 0, 1, 0, 0, 0); 
+                lastSystemTime = new Date();
+                bg.classList.remove("glass-mode");
+                nyOverlay.classList.remove("show");
+                mainContent.style.opacity = "1";
+                recapText.textContent = "Pause Recap";
+                recapIcon.textContent = "⏸";
+                recapTrigger.classList.add("pause-btn");
+            } else {
+                isPaused = !isPaused;
+                recapText.textContent = isPaused ? "Resume Recap" : "Pause Recap";
+                recapIcon.textContent = isPaused ? "▶" : "⏸";
+                lastSystemTime = new Date();
+            }
+        });
+
+        function renderCalendar() {
+            calendarGrid.innerHTML = "";
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth();
+            document.getElementById("calendar-month-year").textContent = selectedDate.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+            
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            for (let i = 1; i <= lastDate; i++) {
+                const btn = document.createElement("button");
+                btn.textContent = i;
+                if (i === selectedDate.getDate()) btn.classList.add("selected");
+                btn.onclick = () => {
+                    selectedDate = new Date(year, month, i);
+                    isRecapping = false;
+                    manualTime = new Date(selectedDate);
+                    lastSystemTime = new Date();
+                    datepicker.hidden = true;
+                    update();
+                };
+                calendarGrid.appendChild(btn);
+            }
+        }
+
+        function getNYNow() {
+            return new Date(new Date().toLocaleString("en-US", {timeZone: "America/New_York"}));
+        }
+
+        function getSeason(date) {
+            const m = date.getMonth() + 1;
+            const d = date.getDate();
+            if ((m === 12 && d >= 21) || m === 1 || m === 2 || (m === 3 && d < 20)) return 'winter';
+            if ((m === 3 && d >= 20) || m === 4 || m === 5 || (m === 6 && d < 21)) return 'spring';
+            if ((m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d < 22)) return 'summer';
+            return 'fall';
+        }
+
+        function resetApp() {
+            isRecapping = false;
+            isPaused = false;
+            manualTime = null;
+            bg.classList.remove("glass-mode");
+            nyOverlay.classList.remove("show");
+            mainContent.style.opacity = "1";
+            recapTrigger.classList.remove("pause-btn");
+            recapText.textContent = "2025 Recap";
+            recapIcon.textContent = "▶";
+            update();
+        }
+
+        function update() {
+            const systemNow = new Date();
+            let activeTime;
+
+            if (manualTime) {
+                if (!isPaused) {
+                    const elapsed = systemNow - lastSystemTime;
+                    if (isRecapping) {
+                        // Recap speed: 12 days per second
+                        // (12 days * 24h * 60m * 60s * 1000ms) / 1000ms per second
+                        const msIn12Days = 12 * 24 * 60 * 60 * 1000;
+                        const simulatedElapsedMs = (elapsed / 1000) * msIn12Days; 
+                        
+                        manualTime = new Date(manualTime.getTime() + simulatedElapsedMs);
+                    } else {
+                        // Normal real-time flow for manually selected dates
+                        manualTime = new Date(manualTime.getTime() + elapsed);
+                    }
+                }
+                activeTime = manualTime;
+                lastSystemTime = systemNow;
+
+                // End of recap check
+                if (activeTime.getFullYear() >= 2026) {
+                    isRecapping = false;
+                    isPaused = false;
+                    manualTime = new Date(2026, 0, 1, 0, 0, 0);
+                    activeTime = manualTime;
+                    bg.classList.add("glass-mode");
+                    nyOverlay.classList.add("show");
+                    mainContent.style.opacity = "0";
+                    recapTrigger.classList.remove("pause-btn");
+                    recapText.textContent = "2025 Recap";
+                    recapIcon.textContent = "▶";
+                }
+            } else {
+                activeTime = getNYNow();
+            }
+            
+            // Logic to lock UI clock at 12:00 AM specifically during Recap
+            let displayTime = new Date(activeTime);
+            if (isRecapping) {
+                displayTime.setHours(0, 0, 0, 0);
+            }
+
+            document.getElementById('clock').textContent = displayTime.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+
+            document.getElementById('date-text').textContent = activeTime.toLocaleDateString('en-US', {
+                month: 'long', day: 'numeric', year: 'numeric'
+            });
+
+            pillLabel.textContent = activeTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            const season = getSeason(activeTime);
+            if (season !== currentActiveSeason) {
+                currentActiveSeason = season;
+                document.getElementById('season-text').textContent = season;
+                bg.style.backgroundImage = `url('${seasonGifs[season]}')`;
+            }
+        }
+
+        update();
+        setInterval(update, 30); 
+    </script>
+</body>
+</html>
