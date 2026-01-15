@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Verification Required</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card);
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+        }
+
+        p {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .captcha-box {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        canvas {
+            background: #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 240px;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            display: block;
+            width: 100%;
+            text-decoration: underline;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.875rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #message {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            min-height: 1.25rem;
+        }
+
+        .error { color: var(--error); }
+        .success { color: #10b981; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="icon">❄️</div>
+    <h1>Security Check</h1>
+    <p>Please enter the characters below to proceed to the website.</p>
+
+    <div class="captcha-box">
+        <canvas id="captchaCanvas" height="80" width="240"></canvas>
+        <button class="refresh-btn" onclick="initCaptcha()">Get new code</button>
+    </div>
+
+    <input type="text" id="captchaInput" placeholder="Enter code here" spellcheck="false" autocomplete="off">
+    <button class="submit-btn" onclick="handleVerify()">Verify and Continue</button>
+    
+    <div id="message"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('captchaCanvas');
+    const ctx = canvas.getContext('2d');
+    const input = document.getElementById('captchaInput');
+    const message = document.getElementById('message');
+    const REDIRECT_URL = "https://code-cat12.github.io/season/testing";
+    
+    let currentCaptcha = "";
+
+    function generateCaptchaText() {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz";
+        let result = "";
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    function initCaptcha() {
+        currentCaptcha = generateCaptchaText();
+        input.value = "";
+        message.textContent = "";
+        
+        // Clear background
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add noise lines
+        for (let i = 0; i < 6; i++) {
+            ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.3})`;
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+            ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+            ctx.stroke();
+        }
+
+        // Draw Text
+        const textDist = 35;
+        ctx.font = "italic bold 32px 'Courier New'";
+        ctx.textBaseline = "middle";
+
+        for (let i = 0; i < currentCaptcha.length; i++) {
+            const x = 25 + i * textDist;
+            const y = canvas.height / 2 + (Math.random() * 10 - 5);
+            const angle = (Math.random() * 20 - 10) * Math.PI / 180;
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = `rgb(${Math.random() * 100}, ${Math.random() * 100}, ${Math.random() * 100})`;
+            ctx.fillText(currentCaptcha[i], 0, 0);
+            ctx.restore();
+        }
+
+        // Add noise dots
+        for (let i = 0; i < 50; i++) {
+            ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function handleVerify() {
+        const userValue = input.value.trim();
+        
+        if (userValue === currentCaptcha) {
+            message.className = "success";
+            message.textContent = "Verification successful! Redirecting...";
+            setTimeout(() => {
+                window.location.href = REDIRECT_URL;
+            }, 800);
+        } else {
+            message.className = "error";
+            message.textContent = "Incorrect code. Please try again.";
+            initCaptcha();
+        }
+    }
+
+    // Allow "Enter" key to submit
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") handleVerify();
+    });
+
+    // Initialize on load
+    window.onload = initCaptcha;
+</script>
+
+</body>
+</html>
