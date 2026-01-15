@@ -93,6 +93,31 @@
         .bullet {
             opacity: 0.6;
         }
+
+        /* Testing Footer Styling - Updated for solid white and correct text */
+        footer {
+            position: fixed;
+            bottom: 1.5rem;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+        }
+
+        footer a {
+            color: #ffffff; /* Solid white */
+            text-decoration: none;
+            font-size: 0.75rem; 
+            font-weight: 400;
+            opacity: 1; /* Not transparent */
+            letter-spacing: 0.02rem;
+            text-transform: none;
+            transition: transform 0.2s ease;
+            display: inline-block;
+        }
+
+        footer a:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -107,6 +132,10 @@
             <span id="season-text" class="season-tag">...</span>
         </div>
     </main>
+
+    <footer>
+        <a href="https://code-cat12.github.io/season/testing/verify" target="_blank" class="shadow-text">Testing Website</a>
+    </footer>
 
     <script>
         const seasonGifs = {
