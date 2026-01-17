@@ -155,6 +155,7 @@
         .glass-pill {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             padding: 12px 24px;
             background: rgba(255, 255, 255, 0.1);
@@ -185,8 +186,33 @@
         }
 
         .pause-btn {
+            background: rgba(255, 179, 64, 0.2);
+            border-color: rgba(255, 179, 64, 0.4);
+        }
+
+        /* Stop Button Styles */
+        .stop-btn {
             background: rgba(255, 59, 48, 0.2);
-            border-color: rgba(255, 59, 48, 0.4);
+            border: 1px solid rgba(255, 59, 48, 0.4);
+            padding: 12px;
+            width: 46px; /* Match height for circle */
+            height: 46px;
+            display: none; /* Hidden by default */
+        }
+        
+        .stop-btn.visible {
+            display: flex;
+        }
+
+        .stop-btn:hover {
+            background: rgba(255, 59, 48, 0.4);
+        }
+
+        /* Upload Button Styles */
+        .upload-btn {
+            padding: 12px;
+            width: 46px;
+            height: 46px;
         }
 
         .datepicker {
@@ -376,6 +402,17 @@
 
     <div class="controls-container">
         <div class="button-group">
+            <!-- Upload Button -->
+            <input type="file" id="bg-upload" accept="image/*" style="display: none;">
+            <button class="glass-pill upload-btn" id="upload-trigger" title="Upload Custom Background">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            </button>
+
+            <!-- Stop Recap Button -->
+            <button class="glass-pill stop-btn" id="stop-recap-btn" title="Stop Recap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+            </button>
+
             <button class="glass-pill recap-btn" id="recap-trigger">
                 <span id="recap-icon">▶</span>
                 <span id="recap-text">2025 Recap</span>
@@ -414,12 +451,14 @@
         let isPaused = false;
         let recapLastUpdate = null; 
         let finishTime = null; 
+        let customBg = null;
 
         const bg = document.getElementById("bg");
         const datepicker = document.getElementById("datepicker");
         const pillTrigger = document.getElementById("pill-trigger");
         const pillLabel = document.getElementById("pill-label");
         const recapTrigger = document.getElementById("recap-trigger");
+        const stopRecapBtn = document.getElementById("stop-recap-btn");
         const recapText = document.getElementById("recap-text");
         const recapIcon = document.getElementById("recap-icon");
         const nyOverlay = document.getElementById("ny-overlay");
@@ -428,8 +467,30 @@
         const progressBar = document.getElementById("progress-bar");
         const progressPctText = document.getElementById("progress-pct");
         const progressWrapper = document.getElementById("progress-wrapper");
+        
+        // Upload Elements
+        const uploadTrigger = document.getElementById("upload-trigger");
+        const bgUpload = document.getElementById("bg-upload");
 
         let calendarViewDate = new Date(); 
+
+        // Upload Logic
+        uploadTrigger.addEventListener('click', () => bgUpload.click());
+
+        bgUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    customBg = e.target.result;
+                    bg.style.backgroundImage = `url('${customBg}')`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Stop Button Logic
+        stopRecapBtn.addEventListener('click', resetApp);
 
         pillTrigger.addEventListener("click", () => {
             datepicker.hidden = !datepicker.hidden;
@@ -466,6 +527,7 @@
                 recapText.textContent = "Pause Recap";
                 recapIcon.textContent = "⏸";
                 recapTrigger.classList.add("pause-btn");
+                stopRecapBtn.classList.add("visible");
             } else {
                 isPaused = !isPaused;
                 recapText.textContent = isPaused ? "Resume Recap" : "Pause Recap";
@@ -509,6 +571,7 @@
                     e.stopPropagation();
                     isRecapping = false;
                     progressWrapper.classList.remove("visible");
+                    stopRecapBtn.classList.remove("visible");
                     const realNow = Date.now();
                     const targetDate = new Date(realNow); 
                     targetDate.setFullYear(year);
@@ -549,6 +612,7 @@
             nyOverlay.classList.remove("show");
             mainContent.style.opacity = "1";
             progressWrapper.classList.remove("visible");
+            stopRecapBtn.classList.remove("visible");
             recapTrigger.classList.remove("pause-btn");
             recapText.textContent = "2025 Recap";
             recapIcon.textContent = "▶";
@@ -569,6 +633,7 @@
                         nyOverlay.classList.add("show");
                         mainContent.style.opacity = "0";
                         progressWrapper.classList.remove("visible");
+                        stopRecapBtn.classList.remove("visible");
                         recapTrigger.classList.remove("pause-btn");
                         recapText.textContent = "2025 Recap";
                         recapIcon.textContent = "▶";
@@ -612,11 +677,18 @@
 
             pillLabel.textContent = activeTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-            const season = getSeason(activeTime);
-            if (season !== currentActiveSeason) {
-                currentActiveSeason = season;
+            // Only update season background if user has NOT uploaded a custom one
+            if (!customBg) {
+                const season = getSeason(activeTime);
+                if (season !== currentActiveSeason) {
+                    currentActiveSeason = season;
+                    document.getElementById('season-text').textContent = season;
+                    bg.style.backgroundImage = `url('${seasonGifs[season]}')`;
+                }
+            } else {
+                // Ensure text still updates even if bg is frozen
+                const season = getSeason(activeTime);
                 document.getElementById('season-text').textContent = season;
-                bg.style.backgroundImage = `url('${seasonGifs[season]}')`;
             }
         }
 
