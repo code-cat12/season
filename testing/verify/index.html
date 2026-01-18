@@ -3,142 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Human Verification Required</title>
+    <title>Identity Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #1e293b;
-            --error: #ef4444;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --accent: #60a5fa;
+            --pink-accent: #ec4899;
+            --pink-glow: rgba(236, 72, 153, 0.4);
+            --purple: #a855f7;
+            --purple-dark: #7e22ce; /* Darker purple for text */
+            --purple-hover: #9333ea;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --bg-glass: rgba(15, 23, 42, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --control-height: 48px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: url('https://i.postimg.cc/tCbxMLV8/future.gif') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .container {
-            background: var(--card);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             width: 100%;
-            max-width: 400px;
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-width: 580px;
+            padding: 3rem 2.5rem;
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 0 1px var(--border-glass);
             text-align: center;
-        }
-
-        .icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0 0 0.5rem 0;
-        }
-
-        p {
-            color: #64748b;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-        }
-
-        .captcha-box {
-            background: #f1f5f9;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
             position: relative;
         }
 
+        .container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 2.5rem;
+            padding: 1.5px;
+            background: linear-gradient(135deg, var(--border-glass), var(--primary-glow), var(--border-glass));
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .icon-container {
+            width: 60px;
+            height: 60px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+            font-size: 2rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: var(--accent);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to bottom, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .captcha-area {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+        }
+
         canvas {
-            background: #e2e8f0;
-            border-radius: 4px;
+            background: #ffffff;
+            border-radius: 10px;
             cursor: pointer;
             width: 100%;
             max-width: 240px;
+            height: 70px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
         }
 
-        .refresh-btn {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 0.5rem;
-            display: block;
+        .action-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
             width: 100%;
-            text-decoration: underline;
+        }
+
+        .action-row input,
+        .action-row .refresh-btn,
+        .action-row .submit-btn {
+            height: var(--control-height);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            white-space: nowrap;
         }
 
         input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
+            flex: 1.8;
+            padding: 0 1rem;
+            background: var(--input-bg);
+            border: 2px solid var(--pink-accent);
+            /* Pink text for entered code */
+            color: var(--pink-accent) !important;
+            text-align: center;
+            letter-spacing: 0.1em;
+            font-weight: 800 !important;
         }
 
         input:focus {
             outline: none;
-            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--pink-glow);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Pink placeholder text to match pink border */
+        input::placeholder {
+            letter-spacing: normal;
+            font-weight: 700;
+            color: var(--pink-accent);
+            opacity: 0.85;
+        }
+
+        /* Refresh button text stays dark purple as requested previously */
+        .refresh-btn {
+            flex: 1;
+            background: rgba(168, 85, 247, 0.1);
+            border: 2px solid var(--purple);
+            color: var(--purple-dark);
+            cursor: pointer;
+            padding: 0 1rem;
+        }
+
+        .refresh-btn:hover {
+            background: var(--purple);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
         }
 
         .submit-btn {
-            width: 100%;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.875rem;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            font-weight: 600;
+            flex: 2;
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--primary);
             cursor: pointer;
-            transition: background-color 0.2s;
+            padding: 0 1.25rem;
+            gap: 8px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
         }
 
         .submit-btn:hover {
-            background-color: var(--primary-hover);
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 0 20px var(--primary-glow);
+            color: #fff;
+            border-color: var(--accent);
         }
 
         #message {
-            margin-top: 1rem;
-            font-size: 0.875rem;
+            margin-top: 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
             min-height: 1.25rem;
         }
 
-        .error { color: var(--error); }
-        .success { color: #10b981; }
+        .error { color: #fb7185; }
+        .success { color: #34d399; }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @media (max-width: 550px) {
+            .action-row {
+                flex-direction: column;
+                height: auto;
+            }
+            .action-row input, .action-row .refresh-btn, .action-row .submit-btn {
+                width: 100%;
+                flex: none;
+            }
+            .container { padding: 2rem 1.5rem; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="icon">❄️</div>
-    <h1>Security Check</h1>
-    <p>Please enter the characters below to proceed to the website.</p>
+    <div class="icon-container">❄️</div>
+    <h1>Access Portal</h1>
+    <p>Please complete verification to establish a secure connection.</p>
 
-    <div class="captcha-box">
-        <canvas id="captchaCanvas" height="80" width="240"></canvas>
-        <button class="refresh-btn" onclick="initCaptcha()">Get new code</button>
+    <div class="captcha-area">
+        <canvas id="captchaCanvas" height="80" width="260" title="Click to refresh" onclick="initCaptcha()"></canvas>
     </div>
 
-    <input type="text" id="captchaInput" placeholder="Enter code here" spellcheck="false" autocomplete="off">
-    <button class="submit-btn" onclick="handleVerify()">Verify and Continue</button>
+    <div class="action-row">
+        <input type="text" id="captchaInput" placeholder="🔒 Enter Code" spellcheck="false" autocomplete="off">
+        
+        <button class="refresh-btn" onclick="initCaptcha()" title="New Code">
+            🔄 Refresh
+        </button>
+
+        <button class="submit-btn" onclick="handleVerify()">
+            <span>Authorize Access</span> 🚀
+        </button>
+    </div>
     
     <div id="message"></div>
 </div>
@@ -153,7 +275,7 @@
     let currentCaptcha = "";
 
     function generateCaptchaText() {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz";
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
         let result = "";
         for (let i = 0; i < 6; i++) {
             result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -166,68 +288,82 @@
         input.value = "";
         message.textContent = "";
         
-        // Clear background
-        ctx.fillStyle = "#e2e8f0";
+        ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Add noise lines
-        for (let i = 0; i < 6; i++) {
-            ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.3})`;
+        ctx.strokeStyle = "#f1f5f9";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < canvas.width; i += 15) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height);
+            ctx.stroke();
+        }
+
+        for (let i = 0; i < 10; i++) {
+            ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.12})`;
+            ctx.lineWidth = 1 + Math.random();
             ctx.beginPath();
             ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
             ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
             ctx.stroke();
         }
 
-        // Draw Text
-        const textDist = 35;
-        ctx.font = "italic bold 32px 'Courier New'";
+        const textDist = 38;
+        ctx.font = "bold 34px 'Courier New', monospace";
         ctx.textBaseline = "middle";
 
         for (let i = 0; i < currentCaptcha.length; i++) {
             const x = 25 + i * textDist;
-            const y = canvas.height / 2 + (Math.random() * 10 - 5);
-            const angle = (Math.random() * 20 - 10) * Math.PI / 180;
+            const y = canvas.height / 2 + (Math.random() * 12 - 6);
+            const angle = (Math.random() * 30 - 15) * Math.PI / 180;
 
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
-            ctx.fillStyle = `rgb(${Math.random() * 100}, ${Math.random() * 100}, ${Math.random() * 100})`;
+            ctx.fillStyle = `rgb(${Math.random() * 50}, ${Math.random() * 50}, ${Math.random() * 100})`;
             ctx.fillText(currentCaptcha[i], 0, 0);
             ctx.restore();
         }
 
-        // Add noise dots
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 60; i++) {
             ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.2})`;
             ctx.beginPath();
-            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1, 0, Math.PI * 2);
+            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 0.7, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 
     function handleVerify() {
-        const userValue = input.value.trim();
+        const userValue = input.value.trim().toUpperCase();
         
         if (userValue === currentCaptcha) {
             message.className = "success";
-            message.textContent = "Verification successful! Redirecting...";
+            message.textContent = "✔ Access granted. Redirecting...";
+            input.disabled = true;
+            const btn = document.querySelector('.submit-btn');
+            btn.style.opacity = "0.6";
+            btn.innerHTML = "<span>Connecting...</span> 🚀";
+            
             setTimeout(() => {
                 window.location.href = REDIRECT_URL;
-            }, 800);
+            }, 1000);
         } else {
             message.className = "error";
-            message.textContent = "Incorrect code. Please try again.";
+            message.textContent = "✖ Verification failed.";
             initCaptcha();
+            input.focus();
+            
+            const container = document.querySelector('.container');
+            container.style.animation = 'none';
+            container.offsetHeight; 
+            container.style.animation = 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both';
         }
     }
 
-    // Allow "Enter" key to submit
     input.addEventListener("keypress", (e) => {
         if (e.key === "Enter") handleVerify();
     });
 
-    // Initialize on load
     window.onload = initCaptcha;
 </script>
 
