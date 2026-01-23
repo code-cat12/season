@@ -35,11 +35,17 @@
             background-position: center;
             background-repeat: no-repeat;
             background-color: #000;
-            transition: background-image 1s ease-in-out, filter 1.5s ease;
+            /* Added transform to transition properties for smooth zoom */
+            transition: background-image 1s ease-in-out, filter 1.5s ease, transform 1s ease;
         }
 
         #bg.glass-mode {
             filter: blur(25px) brightness(0.7);
+        }
+
+        /* Class to crop out watermarks by zooming in */
+        #bg.crop-watermark {
+            transform: scale(1.15);
         }
 
         #bg::after {
@@ -64,13 +70,77 @@
             text-align: center;
             z-index: 10;
             margin-top: -5vh;
-            pointer-events: none;
+            pointer-events: auto; /* Changed to auto to allow clicks on children */
             transition: opacity 1s ease;
+        }
+
+        /* Ensure non-interactive children don't block interaction */
+        main > *:not(#birthday-msg) {
+            pointer-events: none;
         }
 
         .shadow-text {
             font-weight: 900;
             text-shadow: 0px 4px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Birthday Specific Styles */
+        #birthday-msg {
+            font-size: clamp(1.5rem, 3vw, 2.5rem);
+            font-weight: 800;
+            color: white; /* Changed to white */
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0;
+            opacity: 0;
+            max-height: 0;
+            transition: all 0.5s ease;
+            overflow: hidden;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0px 4px 10px rgba(0,0,0,0.8);
+            cursor: pointer;
+            pointer-events: auto; /* Enable clicks */
+            user-select: none;
+        }
+
+        #birthday-msg.visible {
+            opacity: 1;
+            max-height: 100px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Jump Animation */
+        @keyframes jump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+
+        .jump-anim {
+            animation: jump 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #emoji-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        .emoji-flake {
+            position: absolute;
+            top: -10vh;
+            animation: fall linear forwards;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
         .clock {
@@ -446,9 +516,11 @@
 <body>
 
     <div id="testing-tag">Testing Mode <span class="tag-note">For testing purposes only.</span></div>
+    <div id="emoji-container"></div>
     <div id="bg"></div>
 
     <main id="main-content">
+        <div id="birthday-msg" class="shadow-text">Creator's Birthday!</div>
         <div id="clock" class="clock shadow-text">--:-- --</div>
         <div class="details-row shadow-text">
             <span id="date-text">...</span>
@@ -527,6 +599,9 @@
             summer: "https://i.postimg.cc/fb2P1k4L/summer.gif",
             fall: "https://i.postimg.cc/XXScT67p/fall.gif"
         };
+        
+        // Background for Creator's Birthday
+        const birthdayBg = "https://64.media.tumblr.com/104048202029cd05e4f16fdca2446df7/695f97843ee59bb6-85/s1280x1920/9ecdce06cd728a0a2dc78dd1628de5e5ea451c23.gif";
 
         let manualTimeOffset = 0; 
         let currentActiveSeason = "";
@@ -567,11 +642,24 @@
 
         const screensaverTrigger = document.getElementById("screensaver-trigger");
 
+        // Birthday elements
+        const birthdayMsg = document.getElementById("birthday-msg");
+        const emojiContainer = document.getElementById("emoji-container");
+        let emojiInterval = null;
+
         let calendarViewDate = new Date(); 
 
         speedSlider.addEventListener('input', (e) => {
             recapSpeed = parseInt(e.target.value);
             speedVal.textContent = recapSpeed;
+        });
+
+        // Birthday Click Jump Animation
+        birthdayMsg.addEventListener('click', () => {
+            birthdayMsg.classList.remove('jump-anim');
+            // Trigger reflow
+            void birthdayMsg.offsetWidth;
+            birthdayMsg.classList.add('jump-anim');
         });
 
         screensaverTrigger.addEventListener('click', () => {
@@ -629,6 +717,7 @@
             customBg = null;
             currentActiveSeason = ""; // Force refresh of seasonal BG
             resetBgTrigger.classList.remove("visible");
+            bg.classList.remove('crop-watermark'); // Reset zoom
             update();
         });
 
@@ -767,6 +856,49 @@
             update();
         }
 
+        // --- Birthday Logic ---
+        function startBirthday() {
+            if (!birthdayMsg.classList.contains('visible')) {
+                birthdayMsg.classList.add('visible');
+                // Start raining emojis
+                if (!emojiInterval) {
+                    // Initial burst
+                    for(let i=0; i<5; i++) createEmoji();
+                    emojiInterval = setInterval(createEmoji, 300); 
+                }
+            }
+        }
+
+        function stopBirthday() {
+            if (birthdayMsg.classList.contains('visible')) {
+                birthdayMsg.classList.remove('visible');
+                if (emojiInterval) {
+                    clearInterval(emojiInterval);
+                    emojiInterval = null;
+                }
+                // Clear container to prevent visual clutter
+                emojiContainer.innerHTML = '';
+            }
+        }
+
+        function createEmoji() {
+            const e = document.createElement('div');
+            e.classList.add('emoji-flake');
+            // 50/50 split between cake and confetti
+            e.innerText = Math.random() > 0.5 ? '🎂' : '🎊';
+            e.style.left = Math.random() * 100 + 'vw';
+            // Random fall duration between 4s and 8s for "slowly"
+            e.style.animationDuration = (Math.random() * 4 + 4) + 's'; 
+            e.style.opacity = Math.random() * 0.5 + 0.5; // at least 50% opacity
+            e.style.fontSize = (Math.random() * 20 + 20) + 'px';
+            emojiContainer.appendChild(e);
+            
+            // Clean up DOM after animation
+            setTimeout(() => {
+                e.remove();
+            }, 8000);
+        }
+
         function update() {
             const systemNow = Date.now();
             
@@ -815,6 +947,19 @@
             }
 
             const activeTime = getActiveTime();
+            
+            // Check for Birthday (Jan 27)
+            const m = activeTime.getMonth();
+            const d = activeTime.getDate();
+            const isBirthday = (m === 0 && d === 27);
+            
+            // January is 0, 27th is 27.
+            if (isBirthday) {
+                startBirthday();
+            } else {
+                stopBirthday();
+            }
+
             const displayTime = new Date(); 
             
             document.getElementById('clock').textContent = displayTime.toLocaleTimeString('en-US', { 
@@ -828,11 +973,21 @@
             pillLabel.textContent = activeTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
             if (!customBg) {
-                const season = getSeason(activeTime);
-                if (season !== currentActiveSeason) {
-                    currentActiveSeason = season;
-                    document.getElementById('season-text').textContent = season;
-                    bg.style.backgroundImage = `url('${seasonGifs[season]}')`;
+                if (isBirthday) {
+                    if (currentActiveSeason !== 'birthday') {
+                        currentActiveSeason = 'birthday';
+                        bg.style.backgroundImage = `url('${birthdayBg}')`;
+                        bg.classList.add('crop-watermark'); // Add zoom for birthday
+                        document.getElementById('season-text').textContent = "Birthday!";
+                    }
+                } else {
+                    const season = getSeason(activeTime);
+                    if (season !== currentActiveSeason) {
+                        currentActiveSeason = season;
+                        document.getElementById('season-text').textContent = season;
+                        bg.style.backgroundImage = `url('${seasonGifs[season]}')`;
+                        bg.classList.remove('crop-watermark'); // Remove zoom for others
+                    }
                 }
             } else {
                 const season = getSeason(activeTime);
