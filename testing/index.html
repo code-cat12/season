@@ -35,7 +35,6 @@
             background-position: center;
             background-repeat: no-repeat;
             background-color: #000;
-            /* Added transform to transition properties for smooth zoom */
             transition: background-image 1s ease-in-out, filter 1.5s ease, transform 1s ease;
         }
 
@@ -43,7 +42,6 @@
             filter: blur(25px) brightness(0.7);
         }
 
-        /* Class to crop out watermarks by zooming in */
         #bg.crop-watermark {
             transform: scale(1.15);
         }
@@ -70,11 +68,10 @@
             text-align: center;
             z-index: 10;
             margin-top: -5vh;
-            pointer-events: auto; /* Changed to auto to allow clicks on children */
+            pointer-events: auto;
             transition: opacity 1s ease;
         }
 
-        /* Ensure non-interactive children don't block interaction */
         main > *:not(#birthday-msg) {
             pointer-events: none;
         }
@@ -84,11 +81,10 @@
             text-shadow: 0px 4px 30px rgba(0, 0, 0, 0.8);
         }
 
-        /* Birthday Specific Styles */
         #birthday-msg {
             font-size: clamp(1.5rem, 3vw, 2.5rem);
             font-weight: 800;
-            color: white; /* Changed to white */
+            color: white;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             margin-bottom: 0;
@@ -98,7 +94,7 @@
             overflow: hidden;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0px 4px 10px rgba(0,0,0,0.8);
             cursor: pointer;
-            pointer-events: auto; /* Enable clicks */
+            pointer-events: auto;
             user-select: none;
         }
 
@@ -108,7 +104,6 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Jump Animation */
         @keyframes jump {
             0% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
@@ -231,7 +226,7 @@
         }
 
         .glass-pill {
-            position: relative; /* For tooltip anchoring */
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -253,7 +248,6 @@
             font-size: 0.85rem;
         }
 
-        /* Tooltip styling */
         .glass-pill::after {
             content: attr(data-label);
             position: absolute;
@@ -329,7 +323,6 @@
             box-shadow: 0 0 15px rgba(52, 199, 89, 0.4);
         }
 
-        /* Speed Control */
         .speed-control {
             display: flex;
             align-items: center;
@@ -543,7 +536,6 @@
 
     <div class="controls-container" id="controls-panel">
         <div class="button-group">
-            <!-- Screensaver Toggle -->
             <button class="glass-pill icon-btn screensaver-btn" id="screensaver-trigger" data-label="SCREENSAVER MODE" aria-label="Screensaver Mode">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="3" rx="2" ry="2"/><line x1="12" x2="12" y1="18" y2="21"/><line x1="8" x2="16" y1="21" y2="21"/></svg>
             </button>
@@ -600,7 +592,6 @@
             fall: "https://i.postimg.cc/XXScT67p/fall.gif"
         };
         
-        // Background for Creator's Birthday
         const birthdayBg = "https://64.media.tumblr.com/104048202029cd05e4f16fdca2446df7/695f97843ee59bb6-85/s1280x1920/9ecdce06cd728a0a2dc78dd1628de5e5ea451c23.gif";
 
         let manualTimeOffset = 0; 
@@ -611,6 +602,11 @@
         let finishTime = null; 
         let customBg = null;
         let recapSpeed = 12; 
+
+        // New variables for the birthday delay
+        let birthdayDelayActive = false;
+        let birthdayDelayStart = null;
+        let birthdayDelayHandled = false;
 
         let isScreensaverEnabled = false;
         let screensaverTimer = null;
@@ -642,7 +638,6 @@
 
         const screensaverTrigger = document.getElementById("screensaver-trigger");
 
-        // Birthday elements
         const birthdayMsg = document.getElementById("birthday-msg");
         const emojiContainer = document.getElementById("emoji-container");
         let emojiInterval = null;
@@ -654,10 +649,8 @@
             speedVal.textContent = recapSpeed;
         });
 
-        // Birthday Click Jump Animation
         birthdayMsg.addEventListener('click', () => {
             birthdayMsg.classList.remove('jump-anim');
-            // Trigger reflow
             void birthdayMsg.offsetWidth;
             birthdayMsg.classList.add('jump-anim');
         });
@@ -715,9 +708,9 @@
 
         resetBgTrigger.addEventListener('click', () => {
             customBg = null;
-            currentActiveSeason = ""; // Force refresh of seasonal BG
+            currentActiveSeason = ""; 
             resetBgTrigger.classList.remove("visible");
-            bg.classList.remove('crop-watermark'); // Reset zoom
+            bg.classList.remove('crop-watermark');
             update();
         });
 
@@ -745,6 +738,7 @@
                 isRecapping = true;
                 isPaused = false;
                 finishTime = null;
+                birthdayDelayHandled = false; // Reset birthday delay flag
                 
                 const now = new Date();
                 const startOfRecap = new Date(2025, 0, 1, now.getHours(), now.getMinutes(), now.getSeconds());
@@ -841,6 +835,8 @@
             isRecapping = false;
             isPaused = false;
             finishTime = null;
+            birthdayDelayActive = false;
+            birthdayDelayHandled = false;
             manualTimeOffset = 0;
             datepicker.hidden = true;
             bg.classList.remove("glass-mode");
@@ -856,13 +852,10 @@
             update();
         }
 
-        // --- Birthday Logic ---
         function startBirthday() {
             if (!birthdayMsg.classList.contains('visible')) {
                 birthdayMsg.classList.add('visible');
-                // Start raining emojis
                 if (!emojiInterval) {
-                    // Initial burst
                     for(let i=0; i<5; i++) createEmoji();
                     emojiInterval = setInterval(createEmoji, 300); 
                 }
@@ -876,7 +869,6 @@
                     clearInterval(emojiInterval);
                     emojiInterval = null;
                 }
-                // Clear container to prevent visual clutter
                 emojiContainer.innerHTML = '';
             }
         }
@@ -884,16 +876,12 @@
         function createEmoji() {
             const e = document.createElement('div');
             e.classList.add('emoji-flake');
-            // 50/50 split between cake and confetti
             e.innerText = Math.random() > 0.5 ? '🎂' : '🎊';
             e.style.left = Math.random() * 100 + 'vw';
-            // Random fall duration between 4s and 8s for "slowly"
             e.style.animationDuration = (Math.random() * 4 + 4) + 's'; 
-            e.style.opacity = Math.random() * 0.5 + 0.5; // at least 50% opacity
+            e.style.opacity = Math.random() * 0.5 + 0.5;
             e.style.fontSize = (Math.random() * 20 + 20) + 'px';
             emojiContainer.appendChild(e);
-            
-            // Clean up DOM after animation
             setTimeout(() => {
                 e.remove();
             }, 8000);
@@ -903,7 +891,14 @@
             const systemNow = Date.now();
             
             if (isRecapping && !isPaused) {
-                if (finishTime !== null) {
+                // Handle 5-second birthday delay
+                if (birthdayDelayActive) {
+                    if (systemNow - birthdayDelayStart >= 5000) {
+                        birthdayDelayActive = false;
+                        birthdayDelayHandled = true;
+                        recapLastUpdate = systemNow; // Resume recap from now
+                    }
+                } else if (finishTime !== null) {
                     if (systemNow - finishTime >= 1000) {
                         isRecapping = false;
                         isPaused = false;
@@ -924,11 +919,24 @@
                     const elapsed = systemNow - recapLastUpdate;
                     const msInXDays = recapSpeed * 24 * 60 * 60 * 1000;
                     const simulatedElapsedMs = (elapsed / 1000) * msInXDays; 
+                    
+                    const oldTime = getActiveTime();
                     manualTimeOffset += simulatedElapsedMs;
+                    const newTime = getActiveTime();
                     recapLastUpdate = systemNow;
 
-                    const activeTime = new Date(systemNow + manualTimeOffset);
-                    
+                    // Trigger Birthday Delay if we cross into Jan 27th for the first time in this recap
+                    if (!birthdayDelayHandled && oldTime.getMonth() === 0) {
+                        if (oldTime.getDate() < 27 && newTime.getDate() >= 27) {
+                            birthdayDelayActive = true;
+                            birthdayDelayStart = systemNow;
+                            // Lock time to exactly start of Jan 27 for the delay
+                            const bday = new Date(2025, 0, 27, 0, 0, 0);
+                            manualTimeOffset = bday.getTime() - systemNow;
+                        }
+                    }
+
+                    const activeTime = getActiveTime();
                     const startOfYear = new Date(2025, 0, 1).getTime();
                     const endOfYear = new Date(2025, 11, 31, 23, 59, 59).getTime();
                     const pct = Math.min(100, Math.max(0, ((activeTime.getTime() - startOfYear) / (endOfYear - startOfYear)) * 100));
@@ -947,13 +955,10 @@
             }
 
             const activeTime = getActiveTime();
-            
-            // Check for Birthday (Jan 27)
             const m = activeTime.getMonth();
             const d = activeTime.getDate();
             const isBirthday = (m === 0 && d === 27);
             
-            // January is 0, 27th is 27.
             if (isBirthday) {
                 startBirthday();
             } else {
@@ -961,7 +966,6 @@
             }
 
             const displayTime = new Date(); 
-            
             document.getElementById('clock').textContent = displayTime.toLocaleTimeString('en-US', { 
                 hour: '2-digit', minute: '2-digit', hour12: true 
             });
@@ -977,7 +981,7 @@
                     if (currentActiveSeason !== 'birthday') {
                         currentActiveSeason = 'birthday';
                         bg.style.backgroundImage = `url('${birthdayBg}')`;
-                        bg.classList.add('crop-watermark'); // Add zoom for birthday
+                        bg.classList.add('crop-watermark');
                         document.getElementById('season-text').textContent = "Birthday!";
                     }
                 } else {
@@ -986,7 +990,7 @@
                         currentActiveSeason = season;
                         document.getElementById('season-text').textContent = season;
                         bg.style.backgroundImage = `url('${seasonGifs[season]}')`;
-                        bg.classList.remove('crop-watermark'); // Remove zoom for others
+                        bg.classList.remove('crop-watermark');
                     }
                 }
             } else {
