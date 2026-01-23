@@ -3,26 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Identity Verification</title>
+    <title>Google - Identity Verification</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #3b82f6;
-            --primary-glow: rgba(59, 130, 246, 0.5);
-            --accent: #60a5fa;
-            --pink-accent: #ec4899;
-            --pink-glow: rgba(236, 72, 153, 0.4);
-            --purple: #a855f7;
-            --purple-dark: #7e22ce; /* Darker purple for text */
-            --purple-hover: #9333ea;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --bg-glass: rgba(15, 23, 42, 0.75);
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --input-bg: rgba(0, 0, 0, 0.2);
-            --control-height: 48px;
+            --google-blue: #1a73e8;
+            --google-blue-hover: #1765cc;
+            --google-gray: #dadce0;
+            --text-dark: #202124;
+            --text-light: #5f6368;
+            --error-red: #d93025;
+            --success-green: #188038;
         }
 
         * {
@@ -31,238 +24,205 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: url('https://i.postimg.cc/tCbxMLV8/future.gif') no-repeat center center fixed;
             background-size: cover;
-            color: var(--text-main);
+            color: var(--text-dark);
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .container {
-            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-            background: var(--bg-glass);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
             width: 100%;
-            max-width: 580px;
-            padding: 3rem 2.5rem;
-            border-radius: 2.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 0 1px var(--border-glass);
+            max-width: 480px; /* Slightly wider to accommodate bigger captcha */
+            padding: 48px 40px 36px;
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--google-gray);
+            border-radius: 28px; 
             text-align: center;
-            position: relative;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            transition: box-shadow 0.2s ease;
         }
 
-        .container::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 2.5rem;
-            padding: 1.5px;
-            background: linear-gradient(135deg, var(--border-glass), var(--primary-glow), var(--border-glass));
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: destination-out;
-            mask-composite: exclude;
-            pointer-events: none;
+        @media (max-width: 450px) {
+            .container {
+                border: none;
+                padding: 24px;
+                border-radius: 0;
+                background-color: #fff;
+            }
         }
 
-        .icon-container {
-            width: 60px;
-            height: 60px;
-            background: rgba(59, 130, 246, 0.1);
-            border-radius: 18px;
+        .header-icons {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.25rem;
-            font-size: 2rem;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .custom-icon {
+            height: 56px; /* Increased size */
+            width: auto;
+            object-fit: contain;
         }
 
         h1 {
-            font-size: 1.75rem;
-            font-weight: 800;
-            margin: 0 0 0.5rem 0;
+            font-size: 26px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: var(--text-dark);
             letter-spacing: -0.02em;
-            background: linear-gradient(to bottom, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-            line-height: 1.5;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 32px;
+            line-height: 1.4;
         }
 
         .captcha-area {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1.25rem;
-            border-radius: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 28px;
+            border: 1px solid var(--google-gray);
+            display: inline-block;
+            width: 100%;
         }
 
         canvas {
             background: #ffffff;
-            border-radius: 10px;
+            border-radius: 14px;
             cursor: pointer;
-            width: 100%;
-            max-width: 240px;
-            height: 70px;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+            border: 1px solid #eee;
+            width: 100%; /* Make canvas responsive to container */
+            max-width: 320px; /* Increased max width */
+            height: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .action-row {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            width: 100%;
-        }
-
-        .action-row input,
-        .action-row .refresh-btn,
-        .action-row .submit-btn {
-            height: var(--control-height);
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            white-space: nowrap;
+        .input-group {
+            position: relative;
+            margin-bottom: 32px;
+            text-align: left;
         }
 
         input {
-            flex: 1.8;
-            padding: 0 1rem;
-            background: var(--input-bg);
-            border: 2px solid var(--pink-accent);
-            /* Pink text for entered code */
-            color: var(--pink-accent) !important;
-            text-align: center;
-            letter-spacing: 0.1em;
-            font-weight: 800 !important;
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            border: 1px solid var(--google-gray);
+            border-radius: 14px;
+            outline: none;
+            transition: all 0.2s;
+            color: var(--text-dark);
+            font-family: inherit;
         }
 
         input:focus {
-            outline: none;
-            box-shadow: 0 0 15px var(--pink-glow);
-            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--google-blue);
+            padding: 13px 19px;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
         }
 
-        /* Pink placeholder text to match pink border */
-        input::placeholder {
-            letter-spacing: normal;
-            font-weight: 700;
-            color: var(--pink-accent);
-            opacity: 0.85;
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
         }
 
-        /* Refresh button text stays dark purple as requested previously */
-        .refresh-btn {
-            flex: 1;
-            background: rgba(168, 85, 247, 0.1);
-            border: 2px solid var(--purple);
-            color: var(--purple-dark);
+        .text-button {
+            background: none;
+            border: none;
+            color: var(--google-blue);
+            font-weight: 500;
+            font-size: 14px;
             cursor: pointer;
-            padding: 0 1rem;
+            padding: 10px 16px;
+            border-radius: 20px;
+            transition: background 0.2s;
+            font-family: inherit;
         }
 
-        .refresh-btn:hover {
-            background: var(--purple);
-            color: #fff;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        .text-button:hover {
+            background: rgba(26, 115, 232, 0.08);
         }
 
-        .submit-btn {
-            flex: 2;
-            background: transparent;
-            color: var(--accent);
-            border: 2px solid var(--primary);
+        .primary-button {
+            background-color: var(--google-blue);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 24px;
             cursor: pointer;
-            padding: 0 1.25rem;
-            gap: 8px;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+            transition: all 0.2s;
+            font-family: inherit;
         }
 
-        .submit-btn:hover {
-            background: rgba(59, 130, 246, 0.1);
+        .primary-button:hover {
+            background-color: var(--google-blue-hover);
+            box-shadow: 0 1px 3px rgba(60,64,67,0.3);
             transform: translateY(-1px);
-            box-shadow: 0 0 20px var(--primary-glow);
-            color: #fff;
-            border-color: var(--accent);
+        }
+
+        .primary-button:active {
+            transform: translateY(0);
         }
 
         #message {
-            margin-top: 1.25rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            min-height: 1.25rem;
+            margin-top: 12px;
+            padding-left: 4px;
+            font-size: 14px;
+            height: 20px;
+            font-weight: 500;
         }
 
-        .error { color: #fb7185; }
-        .success { color: #34d399; }
+        .error { color: var(--error-red); }
+        .success { color: var(--success-green); }
 
         @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
-        @media (max-width: 550px) {
-            .action-row {
-                flex-direction: column;
-                height: auto;
-            }
-            .action-row input, .action-row .refresh-btn, .action-row .submit-btn {
-                width: 100%;
-                flex: none;
-            }
-            .container { padding: 2rem 1.5rem; }
+        .shake {
+            animation: shake 0.2s ease-in-out 0s 2;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="icon-container">❄️</div>
-    <h1>Access Portal</h1>
-    <p>Please complete verification to establish a secure connection.</p>
-
-    <div class="captcha-area">
-        <canvas id="captchaCanvas" height="80" width="260" title="Click to refresh" onclick="initCaptcha()"></canvas>
-    </div>
-
-    <div class="action-row">
-        <input type="text" id="captchaInput" placeholder="🔒 Enter Code" spellcheck="false" autocomplete="off">
-        
-        <button class="refresh-btn" onclick="initCaptcha()" title="New Code">
-            🔄 Refresh
-        </button>
-
-        <button class="submit-btn" onclick="handleVerify()">
-            <span>Authorize Access</span> 🚀
-        </button>
+<div class="container" id="mainContainer">
+    <div class="header-icons">
+        <img src="https://www.cpsmi.com/blog/wp-content/uploads/2025/10/Picture1.png" alt="Icon" class="custom-icon" onerror="this.style.display='none'">
     </div>
     
-    <div id="message"></div>
+    <h1>Verify it's you</h1>
+    <p>To help keep your account safe, complete this quick check.</p>
+
+    <div class="captcha-area">
+        <!-- Canvas dimensions increased in the JS init, styled here -->
+        <canvas id="captchaCanvas" height="100" width="320" title="Click to refresh" onclick="initCaptcha()"></canvas>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="captchaInput" placeholder="Enter the code you see" spellcheck="false" autocomplete="off">
+        <div id="message"></div>
+    </div>
+
+    <div class="button-row">
+        <button class="text-button" onclick="initCaptcha()">Refresh code</button>
+        <button class="primary-button" id="submitBtn" onclick="handleVerify()">Next</button>
+    </div>
 </div>
 
 <script>
@@ -270,6 +230,8 @@
     const ctx = canvas.getContext('2d');
     const input = document.getElementById('captchaInput');
     const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+    const container = document.getElementById('mainContainer');
     const REDIRECT_URL = "https://code-cat12.github.io/season/testing";
     
     let currentCaptcha = "";
@@ -287,49 +249,44 @@
         currentCaptcha = generateCaptchaText();
         input.value = "";
         message.textContent = "";
+        message.className = "";
         
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.strokeStyle = "#f1f5f9";
+        // Grid lines (subtle)
+        ctx.strokeStyle = "#f1f3f4";
         ctx.lineWidth = 1;
-        for (let i = 0; i < canvas.width; i += 15) {
+        for (let i = 0; i < canvas.width; i += 25) {
             ctx.beginPath();
             ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height);
             ctx.stroke();
         }
 
+        // Noise lines
         for (let i = 0; i < 10; i++) {
-            ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.12})`;
-            ctx.lineWidth = 1 + Math.random();
+            ctx.strokeStyle = `rgba(0,0,0,${Math.random() * 0.1})`;
             ctx.beginPath();
             ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
             ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
             ctx.stroke();
         }
 
-        const textDist = 38;
-        ctx.font = "bold 34px 'Courier New', monospace";
+        const textDist = 45; // Increased spacing for larger canvas
+        ctx.font = "bold 38px 'Inter', sans-serif";
         ctx.textBaseline = "middle";
 
         for (let i = 0; i < currentCaptcha.length; i++) {
-            const x = 25 + i * textDist;
-            const y = canvas.height / 2 + (Math.random() * 12 - 6);
-            const angle = (Math.random() * 30 - 15) * Math.PI / 180;
+            const x = 40 + i * textDist;
+            const y = canvas.height / 2 + (Math.random() * 14 - 7);
+            const angle = (Math.random() * 24 - 12) * Math.PI / 180;
 
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
-            ctx.fillStyle = `rgb(${Math.random() * 50}, ${Math.random() * 50}, ${Math.random() * 100})`;
+            ctx.fillStyle = "#3c4043";
             ctx.fillText(currentCaptcha[i], 0, 0);
             ctx.restore();
-        }
-
-        for (let i = 0; i < 60; i++) {
-            ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.2})`;
-            ctx.beginPath();
-            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 0.7, 0, Math.PI * 2);
-            ctx.fill();
         }
     }
 
@@ -338,25 +295,23 @@
         
         if (userValue === currentCaptcha) {
             message.className = "success";
-            message.textContent = "✔ Access granted. Redirecting...";
+            message.textContent = "Verified. Redirecting...";
             input.disabled = true;
-            const btn = document.querySelector('.submit-btn');
-            btn.style.opacity = "0.6";
-            btn.innerHTML = "<span>Connecting...</span> 🚀";
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Loading...";
             
             setTimeout(() => {
                 window.location.href = REDIRECT_URL;
-            }, 1000);
+            }, 800);
         } else {
             message.className = "error";
-            message.textContent = "✖ Verification failed.";
+            message.textContent = "Wrong code. Try again.";
+            
+            container.classList.add('shake');
+            setTimeout(() => container.classList.remove('shake'), 400);
+            
             initCaptcha();
             input.focus();
-            
-            const container = document.querySelector('.container');
-            container.style.animation = 'none';
-            container.offsetHeight; 
-            container.style.animation = 'shake 0.4s cubic-bezier(.36,.07,.19,.97) both';
         }
     }
 
